@@ -1,4 +1,4 @@
-module bitbucket.org/marcoshack/gotest/validator
+module github.com/marcoshack/go-examples/validator
 
 go 1.17
 

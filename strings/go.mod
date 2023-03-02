@@ -1,4 +1,4 @@
-module bitbucket.org/marcoshack/gotest/strings
+module github.com/marcoshack/go-examples/strings
 
 go 1.17
 
