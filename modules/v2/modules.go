@@ -1,5 +1,5 @@
 package v2
 
-func Foo() string {
+func SayFoo() string {
 	return "foo/v2"
 }

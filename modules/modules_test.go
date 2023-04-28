@@ -13,5 +13,5 @@ func TestModulesV1(t *testing.T) {
 }
 
 func TestModulesV2(t *testing.T) {
-	require.Equal(t, "foo/v2", v2.Foo())
+	require.Equal(t, "foo/v2", v2.SayFoo())
 }
