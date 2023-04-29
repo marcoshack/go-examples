@@ -1,7 +1,6 @@
 
 test:
-	go test -v ./...
-	go test -v ./modules
-	go test -v ./modules/v2
-	go test -v ./strings
-	go test -v ./validator
+	@echo '=== Running tests for all workspace modules'
+	@for mod in $(shell go list -f '{{.Dir}}' -m); do go test -v $$mod/...; done
+
+.PHONY: test mods
