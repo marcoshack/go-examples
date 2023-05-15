@@ -3,7 +3,7 @@ module github.com/marcoshack/go-examples/modules
 go 1.20
 
 require (
-	github.com/marcoshack/go-examples/modules/v2 v2.0.0-20230428024628-510fe95e27d2
+	github.com/marcoshack/go-examples/modules/v2 v2.0.0-20230428041455-2c7300da60f0
 	github.com/stretchr/testify v1.8.2
 )
 
