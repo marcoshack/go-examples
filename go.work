@@ -1,4 +1,4 @@
-go 1.20
+go 1.22.0
 
 use (
 	.
@@ -6,4 +6,5 @@ use (
 	./modules/v2
 	./strings
 	./validator
+	./concurrency
 )
