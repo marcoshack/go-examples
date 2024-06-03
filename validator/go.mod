@@ -1,6 +1,6 @@
 module github.com/marcoshack/go-examples/validator
 
-go 1.17
+go 1.21
 
 require (
 	github.com/go-playground/validator/v10 v10.10.1
