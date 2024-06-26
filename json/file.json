@@ -1,0 +1,6 @@
+{
+    "attribute1": "value1",
+    "anotherStruct": {
+        "anotherAttribute1": "anotherValue1"
+    }
+}
