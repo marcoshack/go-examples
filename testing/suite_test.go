@@ -83,3 +83,58 @@ type ExtendedExampleSuite struct {
 func (s *ExtendedExampleSuite) TestFour() {
 	require.True(s.T(), s.flag)
 }
+
+//
+// Test multiple suites running in a single Test method.
+// This can be used to share and compose test suites.
+//
+
+// BaseSuite provides common attributes and behavior to all my test suites.
+type BaseSuite struct {
+	suite.Suite
+	SomeInterestingAttribute string
+}
+
+func (bs *BaseSuite) SetupTest() {
+	if bs.SomeInterestingAttribute == "" {
+		bs.SomeInterestingAttribute = "foo"
+	}
+}
+
+type Suite1 struct {
+	BaseSuite
+}
+
+func (s *Suite1) TestSuite1_TestCase1() {
+	s.Require().Equal(s.SomeInterestingAttribute, "foo")
+}
+
+type Suite2 struct {
+	BaseSuite
+}
+
+func (s *Suite2) TestSuite2_TestCase1() {
+	s.Require().Equal(s.SomeInterestingAttribute, "foo")
+}
+
+type Suite3 struct {
+	BaseSuite
+}
+
+func (s *Suite3) TestSuite3_TestCase1() {
+	s.Require().Equal(s.SomeInterestingAttribute, "foo")
+}
+
+var (
+	suites = []suite.TestingSuite{new(Suite1), new(Suite2), new(Suite3)}
+)
+
+func TestSuites(t *testing.T) {
+	for _, s := range suites {
+		suite.Run(t, s)
+	}
+}
+
+func TestSuite1(t *testing.T) {
+	suite.Run(t, new(Suite1))
+}
