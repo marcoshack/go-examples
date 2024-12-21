@@ -1,10 +1,11 @@
-go 1.22.0
+go 1.23.3
 
 use (
 	.
+	./concurrency
+	./grpc
 	./modules
 	./modules/v2
 	./strings
 	./validator
-	./concurrency
 )
