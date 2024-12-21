@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"github.com/marcoshack/go-examples/grpc/api/api"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -15,10 +16,14 @@ const (
 )
 
 func main() {
+	// initialize zerolog logger
+	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: "15:04:05"}
+	logger := zerolog.New(output).With().Timestamp().Logger()
+
 	// Set up a connection to the server.
 	conn, err := grpc.NewClient(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatal().Err(err).Msg("did not connect")
+		logger.Fatal().Err(err).Msg("did not connect")
 	}
 	defer conn.Close()
 	c := api.NewPingServiceClient(conn)
@@ -30,7 +35,7 @@ func main() {
 	r, err := c.Ping(ctx, &api.PingRequest{Message: "ping"})
 	elapsed := time.Since(start)
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not ping")
+		logger.Fatal().Err(err).Msg("could not ping")
 	}
-	log.Info().Interface("response", r.GetMessage()).Str("elapsed", elapsed.String()).Msg("response received")
+	logger.Info().Interface("response", r.GetMessage()).Str("elapsed", elapsed.String()).Msg("PING response received")
 }

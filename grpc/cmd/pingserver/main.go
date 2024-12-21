@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"os"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/marcoshack/go-examples/grpc/api/api"
@@ -18,7 +19,9 @@ const (
 )
 
 func main() {
-	logger := zerolog.Nop()
+	// initialize zerolog logger
+	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: "15:04:05"}
+	logger := zerolog.New(output).With().Timestamp().Logger()
 
 	// initialize grpc server and register service
 	grpcOptions := createServerOptions(logger)
@@ -28,18 +31,22 @@ func main() {
 	// start server
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
-		log.Err(err).Msg("failed to create server listener")
+		logger.Err(err).Msg("failed to create server listener")
 	}
-	log.Info().Str("bindAddr", lis.Addr().String()).Msg("server listening")
+	logger.Info().Str("bindAddr", lis.Addr().String()).Msg("server listening")
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Err(err).Msg("failed to create server listener")
 	}
 }
 
 func createServerOptions(logger zerolog.Logger) []grpc.ServerOption {
+	opts := []logging.Option{
+		logging.WithLogOnEvents(logging.StartCall, logging.FinishCall),
+		// Add any other option (check functions starting with logging.With).
+	}
 	return []grpc.ServerOption{
-		grpc.UnaryInterceptor(logging.UnaryServerInterceptor(interceptorLogger(logger))),
-		grpc.StreamInterceptor(logging.StreamServerInterceptor(interceptorLogger(logger))),
+		grpc.UnaryInterceptor(logging.UnaryServerInterceptor(interceptorLogger(logger), opts...)),
+		grpc.StreamInterceptor(logging.StreamServerInterceptor(interceptorLogger(logger), opts...)),
 	}
 }
 
