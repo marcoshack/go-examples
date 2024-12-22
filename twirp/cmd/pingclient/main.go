@@ -3,11 +3,11 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"net/http"
 	"os"
 	"time"
 
+	"github.com/marcoshack/go-examples/timeutil"
 	"github.com/marcoshack/go-examples/twirp/api/api"
 	"github.com/rs/zerolog"
 )
@@ -37,18 +37,21 @@ func main() {
 	logger.Info().Str("client", clientType).Str("baseURL", baseURL).Msg("twirp client initialized")
 
 	// contact the server and print out its response.
-	avgLatency := time.Duration(0)
+	latencies := make([]time.Duration, numRequests)
 	for i := 0; i < numRequests; i++ {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
 		start := time.Now()
 		response, err := twirpClient.Ping(ctx, &api.PingRequest{Message: "Hello, Twirp!"})
-		latency := time.Since(start)
-		avgLatency += latency
 		if err != nil {
 			logger.Error().Err(err).Msg("could not ping")
+			continue
 		}
+		latency := time.Since(start)
+		latencies[i] = latency
 		logger.Info().Str("response", response.GetMessage()).Str("latency", latency.String()).Msg("PING response received")
 	}
-	logger.Info().Int("numRequests", numRequests).Str("avgLatency", fmt.Sprintf("%dµs", avgLatency.Microseconds()/int64(numRequests))).Msg("done")
+
+	stats := timeutil.NewLatencyStats(latencies)
+	logger.Info().EmbedObject(stats).Msg("Latency statistics")
 }
