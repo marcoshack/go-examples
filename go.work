@@ -7,5 +7,6 @@ use (
 	./modules
 	./modules/v2
 	./strings
+	./twirp
 	./validator
 )

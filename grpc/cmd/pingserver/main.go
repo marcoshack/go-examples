@@ -24,9 +24,9 @@ func main() {
 	logger := zerolog.New(output).With().Timestamp().Logger()
 
 	// initialize grpc server and register service
-	grpcOptions := createServerOptions(logger)
+	grpcOptions := []grpc.ServerOption{}
 	grpcServer := grpc.NewServer(grpcOptions...)
-	api.RegisterPingServiceServer(grpcServer, &server.PingService{})
+	api.RegisterPingServiceServer(grpcServer, server.NewPingService())
 
 	// start server
 	lis, err := net.Listen("tcp", port)
@@ -39,7 +39,7 @@ func main() {
 	}
 }
 
-func createServerOptions(logger zerolog.Logger) []grpc.ServerOption {
+func CreateServerOptions(logger zerolog.Logger) []grpc.ServerOption {
 	opts := []logging.Option{
 		logging.WithLogOnEvents(logging.StartCall, logging.FinishCall),
 		// Add any other option (check functions starting with logging.With).

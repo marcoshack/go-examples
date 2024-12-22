@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package ping;
+option go_package = "github.com/marcoshack/go-examples/twirp/api";
+
+// The request message containing the ping.
+message PingRequest {
+    string message = 1;
+}
+
+// The response message containing the pong.
+message PingResponse {
+    string message = 1;
+}
+
+// The ping service definition.
+service PingService {
+    // Sends a ping
+    rpc Ping (PingRequest) returns (PingResponse);
+}
