@@ -18,7 +18,7 @@ func main() {
 	var numRequests int
 	flag.StringVar(&baseURL, "s", "http://localhost:8080", "Server endpoint")
 	flag.StringVar(&clientType, "t", "protobuf", "Type of client to use (json or protobuf)")
-	flag.IntVar(&numRequests, "n", 1, "Number of requests to make")
+	flag.IntVar(&numRequests, "n", 5, "Number of requests to make")
 	flag.Parse()
 
 	// initialize zerolog logger
