@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/marcoshack/go-examples/twirp/api/api"
+	"github.com/rs/zerolog/log"
 )
 
 type PingService struct {
@@ -14,5 +15,6 @@ func NewPingService() *PingService {
 }
 
 func (s *PingService) Ping(ctx context.Context, req *api.PingRequest) (*api.PingResponse, error) {
+	log.Ctx(ctx).Debug().Interface("request", req).Msg("Processing Ping request")
 	return &api.PingResponse{Message: "Pong"}, nil
 }

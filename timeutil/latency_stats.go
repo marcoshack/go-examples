@@ -15,6 +15,9 @@ type LatencyStats struct {
 
 func NewLatencyStats(durations []time.Duration) *LatencyStats {
 	size := len(durations)
+	if size == 0 {
+		return &LatencyStats{}
+	}
 	stats := LatencyStats{
 		durations: durations,
 		Size:      size,
@@ -39,6 +42,12 @@ func NewLatencyStats(durations []time.Duration) *LatencyStats {
 }
 
 func (s *LatencyStats) TM(percentile int) time.Duration {
+	if s.Size == 0 {
+		return 0
+	}
+	if s.Size == 1 {
+		return s.durations[0]
+	}
 	truncatedLatencies := s.durations[:int(float64(s.Size)*float64(percentile)/100)]
 	var totalTruncatedLatency time.Duration
 	for _, latency := range truncatedLatencies {

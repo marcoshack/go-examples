@@ -17,3 +17,13 @@ ping-client:
 
 clean:
 	rm -f build/
+
+docker: Dockerfile
+	docker build --tag go-example-twirp .
+	docker network inspect go-example-twirp >/dev/null 2>&1 || docker network create go-example-twirp
+
+docker-run-server:
+	docker run -it --rm -v $(PWD):/twirp --net go-example-twirp --name pingserver --workdir /twirp go-example-twirp /twirp/build/bin/pingserver
+
+docker-run-client:
+	docker run -it --rm -v $(PWD):/twirp --net go-example-twirp --name pingclient --workdir /twirp go-example-twirp /twirp/build/bin/pingclient -s http://pingserver:8080 $(ARGS)
