@@ -15,10 +15,11 @@ import (
 	"github.com/twitchtv/twirp"
 )
 
-type contextKey string
+type contextKey int
 
 const (
-	startTimeCtxKey contextKey = "startTime"
+	startTimeCtxKey contextKey = 1 + iota
+	requestIdCtxKey
 )
 
 func main() {
@@ -53,7 +54,11 @@ func NewServerHooks(logger zerolog.Logger) *twirp.ServerHooks {
 		},
 		ResponseSent: func(ctx context.Context) {
 			startTime := ctx.Value(startTimeCtxKey).(time.Time)
-			log.Ctx(ctx).Info().Str("elapsed", time.Since(startTime).String()).Msg("RESPONSE")
+			status, _ := twirp.StatusCode(ctx)
+			log.Ctx(ctx).Info().
+				Str("elapsed", time.Since(startTime).String()).
+				Str("status", status).
+				Msg("RESPONSE")
 		},
 	}
 }
