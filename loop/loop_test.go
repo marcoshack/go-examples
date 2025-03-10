@@ -1,17 +1,21 @@
-package loop
+package main_test
 
 import (
-	"fmt"
 	"testing"
+
+	"github.com/go-playground/assert/v2"
 )
 
 func TestForLoopWithRerence(t *testing.T) {
 	origNumbers := []int{1, 2, 3}
-	newNumbers := make([]*int, 0, len(origNumbers))
+	newNumbers := make([]*int, 3, len(origNumbers))
 
-	for _, n := range origNumbers {
-		newNumbers = append(newNumbers, &n)
+	// see https://go.dev/blog/loopvar-preview
+	for i, n := range origNumbers {
+		newNumbers[i] = &n
 	}
 
-	fmt.Printf("newNumbers: %v", newNumbers)
+	for i := range origNumbers {
+		assert.Equal(t, origNumbers[i], newNumbers[i])
+	}
 }
