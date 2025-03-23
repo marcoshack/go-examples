@@ -1,4 +1,4 @@
-module github.com/marcoshack/go-examples/twirp/api
+module github.com/marcoshack/go-examples/twirp
 
 go 1.23.3
 

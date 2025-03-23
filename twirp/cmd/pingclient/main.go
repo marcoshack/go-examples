@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/marcoshack/go-examples/timeutil"
-	"github.com/marcoshack/go-examples/twirp/api/api"
+	"github.com/marcoshack/go-examples/twirp/api"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )

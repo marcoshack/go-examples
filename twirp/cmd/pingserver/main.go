@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/marcoshack/go-examples/twirp/api/api"
-	"github.com/marcoshack/go-examples/twirp/api/server"
+	"github.com/marcoshack/go-examples/twirp/api"
+	"github.com/marcoshack/go-examples/twirp/server"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/twitchtv/twirp"

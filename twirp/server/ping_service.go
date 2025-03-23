@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 
-	"github.com/marcoshack/go-examples/twirp/api/api"
+	"github.com/marcoshack/go-examples/twirp/api"
 	"github.com/rs/zerolog/log"
 )
 
