@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 
-	"github.com/marcoshack/go-examples/grpc/api/api"
+	"github.com/marcoshack/go-examples/grpc/api"
 )
 
 type PingService struct {

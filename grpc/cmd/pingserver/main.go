@@ -7,8 +7,8 @@ import (
 	"os"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
-	"github.com/marcoshack/go-examples/grpc/api/api"
-	"github.com/marcoshack/go-examples/grpc/api/server"
+	"github.com/marcoshack/go-examples/grpc/api"
+	"github.com/marcoshack/go-examples/grpc/server"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"

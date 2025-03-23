@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/marcoshack/go-examples/grpc/api/api"
+	"github.com/marcoshack/go-examples/grpc/api"
 	"github.com/marcoshack/go-examples/timeutil"
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
