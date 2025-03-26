@@ -16,3 +16,9 @@ func TestMaps_IncrementValuesToNonExistingKeys(t *testing.T) {
 	require.Equal(t, 2, myMap["bar"])
 	require.Equal(t, 0, myMap["baz"])
 }
+
+func TestMaps_LookupInUnitializedMap(t *testing.T) {
+	var myMap map[string]bool
+	require.False(t, myMap["foo"], "non existing map key should return false")
+	require.NotContains(t, myMap, "foo")
+}
