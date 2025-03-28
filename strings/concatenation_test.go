@@ -12,7 +12,7 @@ var (
 	result string
 )
 
-func BenchmarkPlus(b *testing.B) {
+func BenchmarkStringsConcatenation_Plus(b *testing.B) {
 	var s string
 	for n := 0; n < b.N; n++ {
 		s = uuid.New().String() + "#" + uuid.New().String() + "#" + uuid.New().String() + "#" + uuid.New().String()
@@ -20,7 +20,7 @@ func BenchmarkPlus(b *testing.B) {
 	result = s
 }
 
-func BenchmarkPlusMultiLine(b *testing.B) {
+func BenchmarkStringsConcatenation_PlusMultiLine(b *testing.B) {
 	var s string
 	for n := 0; n < b.N; n++ {
 		s = uuid.New().String()
@@ -34,7 +34,7 @@ func BenchmarkPlusMultiLine(b *testing.B) {
 	result = s
 }
 
-func BenchmarkSprintf(b *testing.B) {
+func BenchmarkStringsConcatenation_Sprintf(b *testing.B) {
 	var s string
 	for n := 0; n < b.N; n++ {
 		s = fmt.Sprintf("%s#%s#%s#%s", uuid.New().String(), uuid.New().String(), uuid.New().String(), uuid.New().String())
@@ -42,7 +42,7 @@ func BenchmarkSprintf(b *testing.B) {
 	result = s
 }
 
-func BenchmarkJoin(b *testing.B) {
+func BenchmarkStringsConcatenation_Join(b *testing.B) {
 	var s string
 	for n := 0; n < b.N; n++ {
 		elems := []string{uuid.New().String(), uuid.New().String(), uuid.New().String(), uuid.New().String()}
@@ -51,7 +51,7 @@ func BenchmarkJoin(b *testing.B) {
 	result = s
 }
 
-func BenchmarkJoinAppend(b *testing.B) {
+func BenchmarkStringsConcatenation_JoinAppend(b *testing.B) {
 	var s string
 	for n := 0; n < b.N; n++ {
 		elems := make([]string, 0, 4)
@@ -64,7 +64,7 @@ func BenchmarkJoinAppend(b *testing.B) {
 	result = s
 }
 
-func BenchmarkBuilder(b *testing.B) {
+func BenchmarkStringsConcatenation_Builder(b *testing.B) {
 	var s string
 	for n := 0; n < b.N; n++ {
 		var sb strings.Builder
