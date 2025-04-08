@@ -22,3 +22,16 @@ func TestMaps_LookupInUnitializedMap(t *testing.T) {
 	require.False(t, myMap["foo"], "non existing map key should return false")
 	require.NotContains(t, myMap, "foo")
 }
+
+func TestMaps_StructDefaultValues(t *testing.T) {
+	type myType struct {
+		key   string
+		value string
+	}
+	myMap := make(map[string]myType)
+	myMap["foo"] = myType{key: "k", value: "v"}
+
+	value, found := myMap["baz"]
+	require.False(t, found)
+	require.NotNil(t, value)
+}
