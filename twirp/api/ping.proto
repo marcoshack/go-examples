@@ -17,4 +17,5 @@ message PingResponse {
 service PingService {
     // Sends a ping
     rpc Ping (PingRequest) returns (PingResponse);
+    rpc UnsafePing (PingRequest) returns (PingResponse);
 }

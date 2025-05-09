@@ -30,30 +30,41 @@ func main() {
 	// initialize twirp server and register service
 	service := server.NewPingService()
 	twirpHandler := api.NewPingServiceServer(service,
-		twirp.WithServerHooks(NewServerHooks(logger)),
+		twirp.WithServerHooks(NewServerHooks(logger, api.PingServicePathPrefix)),
 	)
 
 	// TODO read from CLI argument
-	bindAddr := ":8080"
+	bindAddr := ":8081"
 	logger.Info().Str("bindAddr", bindAddr).Msg("server listening")
-	http.ListenAndServe(bindAddr, twirpHandler)
+	err := http.ListenAndServe(bindAddr, twirpHandler)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("error listening")
+	}
 }
 
-func NewServerHooks(logger zerolog.Logger) *twirp.ServerHooks {
+func NewServerHooks(logger zerolog.Logger, pathPrefix string) *twirp.ServerHooks {
 	return &twirp.ServerHooks{
 		RequestRouted: func(ctx context.Context) (context.Context, error) {
 			ctx = context.WithValue(ctx, startTimeCtxKey, time.Now())
 			method, _ := twirp.MethodName(ctx)
+			blocked, err := isBlocked(pathPrefix, method)
+
 			requestId := getOrCreateRequestId(ctx)
 			requestCtx := logger.With().Fields(map[string]interface{}{
 				"method":    method,
 				"requestId": requestId,
 			}).Logger().WithContext(ctx)
-			log.Ctx(requestCtx).Info().Msg("REQUEST")
-			return requestCtx, nil
+
+			log.Ctx(requestCtx).Info().Bool("blocked", blocked).Msg("REQUEST")
+
+			return requestCtx, err
 		},
 		ResponseSent: func(ctx context.Context) {
-			startTime := ctx.Value(startTimeCtxKey).(time.Time)
+			startTime := time.Now()
+			startTimeCtxValue := ctx.Value(startTimeCtxKey)
+			if startTimeCtxValue != nil {
+				startTime = startTimeCtxValue.(time.Time)
+			}
 			status, _ := twirp.StatusCode(ctx)
 			log.Ctx(ctx).Info().
 				Str("elapsed", time.Since(startTime).String()).
@@ -61,6 +72,19 @@ func NewServerHooks(logger zerolog.Logger) *twirp.ServerHooks {
 				Msg("RESPONSE")
 		},
 	}
+}
+
+func isBlocked(pathPrefix, method string) (bool, error) {
+	if strings.ToLower(os.Getenv("STAGE")) != "prod" || !strings.HasPrefix(method, "Unsafe") {
+		return false, nil
+	}
+
+	// reproduce the same message and meta as a real not found from the generated twirp code.
+	path := pathPrefix + method
+	err := twirp.NewError(twirp.BadRoute, "no handler for path \""+path+"\"")
+	err = err.WithMeta("twirp_invalid_route", "POST "+path)
+
+	return true, err
 }
 
 func getOrCreateRequestId(ctx context.Context) string {

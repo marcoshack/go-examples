@@ -35,6 +35,8 @@ const _ = twirp.TwirpPackageMinVersion_8_1_0
 type PingService interface {
 	// Sends a ping
 	Ping(context.Context, *PingRequest) (*PingResponse, error)
+
+	UnsafePing(context.Context, *PingRequest) (*PingResponse, error)
 }
 
 // ===========================
@@ -43,7 +45,7 @@ type PingService interface {
 
 type pingServiceProtobufClient struct {
 	client      HTTPClient
-	urls        [1]string
+	urls        [2]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -71,8 +73,9 @@ func NewPingServiceProtobufClient(baseURL string, client HTTPClient, opts ...twi
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(pathPrefix, "ping", "PingService")
-	urls := [1]string{
+	urls := [2]string{
 		serviceURL + "Ping",
+		serviceURL + "UnsafePing",
 	}
 
 	return &pingServiceProtobufClient{
@@ -129,13 +132,59 @@ func (c *pingServiceProtobufClient) callPing(ctx context.Context, in *PingReques
 	return out, nil
 }
 
+func (c *pingServiceProtobufClient) UnsafePing(ctx context.Context, in *PingRequest) (*PingResponse, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "ping")
+	ctx = ctxsetters.WithServiceName(ctx, "PingService")
+	ctx = ctxsetters.WithMethodName(ctx, "UnsafePing")
+	caller := c.callUnsafePing
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *PingRequest) (*PingResponse, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*PingRequest)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*PingRequest) when calling interceptor")
+					}
+					return c.callUnsafePing(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*PingResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*PingResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *pingServiceProtobufClient) callUnsafePing(ctx context.Context, in *PingRequest) (*PingResponse, error) {
+	out := new(PingResponse)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
 // =======================
 // PingService JSON Client
 // =======================
 
 type pingServiceJSONClient struct {
 	client      HTTPClient
-	urls        [1]string
+	urls        [2]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -163,8 +212,9 @@ func NewPingServiceJSONClient(baseURL string, client HTTPClient, opts ...twirp.C
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(pathPrefix, "ping", "PingService")
-	urls := [1]string{
+	urls := [2]string{
 		serviceURL + "Ping",
+		serviceURL + "UnsafePing",
 	}
 
 	return &pingServiceJSONClient{
@@ -207,6 +257,52 @@ func (c *pingServiceJSONClient) Ping(ctx context.Context, in *PingRequest) (*Pin
 func (c *pingServiceJSONClient) callPing(ctx context.Context, in *PingRequest) (*PingResponse, error) {
 	out := new(PingResponse)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *pingServiceJSONClient) UnsafePing(ctx context.Context, in *PingRequest) (*PingResponse, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "ping")
+	ctx = ctxsetters.WithServiceName(ctx, "PingService")
+	ctx = ctxsetters.WithMethodName(ctx, "UnsafePing")
+	caller := c.callUnsafePing
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *PingRequest) (*PingResponse, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*PingRequest)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*PingRequest) when calling interceptor")
+					}
+					return c.callUnsafePing(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*PingResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*PingResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *pingServiceJSONClient) callUnsafePing(ctx context.Context, in *PingRequest) (*PingResponse, error) {
+	out := new(PingResponse)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -320,6 +416,9 @@ func (s *pingServiceServer) ServeHTTP(resp http.ResponseWriter, req *http.Reques
 	switch method {
 	case "Ping":
 		s.servePing(ctx, resp, req)
+		return
+	case "UnsafePing":
+		s.serveUnsafePing(ctx, resp, req)
 		return
 	default:
 		msg := fmt.Sprintf("no handler for path %q", req.URL.Path)
@@ -485,6 +584,186 @@ func (s *pingServiceServer) servePingProtobuf(ctx context.Context, resp http.Res
 	}
 	if respContent == nil {
 		s.writeError(ctx, resp, twirp.InternalError("received a nil *PingResponse and nil error while calling Ping. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *pingServiceServer) serveUnsafePing(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveUnsafePingJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveUnsafePingProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *pingServiceServer) serveUnsafePingJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "UnsafePing")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	d := json.NewDecoder(req.Body)
+	rawReqBody := json.RawMessage{}
+	if err := d.Decode(&rawReqBody); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+	reqContent := new(PingRequest)
+	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
+	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+
+	handler := s.PingService.UnsafePing
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *PingRequest) (*PingResponse, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*PingRequest)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*PingRequest) when calling interceptor")
+					}
+					return s.PingService.UnsafePing(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*PingResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*PingResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *PingResponse
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *PingResponse and nil error while calling UnsafePing. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	marshaler := &protojson.MarshalOptions{UseProtoNames: !s.jsonCamelCase, EmitUnpopulated: !s.jsonSkipDefaults}
+	respBytes, err := marshaler.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *pingServiceServer) serveUnsafePingProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "UnsafePing")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := io.ReadAll(req.Body)
+	if err != nil {
+		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
+		return
+	}
+	reqContent := new(PingRequest)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.PingService.UnsafePing
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *PingRequest) (*PingResponse, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*PingRequest)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*PingRequest) when calling interceptor")
+					}
+					return s.PingService.UnsafePing(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*PingResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*PingResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *PingResponse
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *PingResponse and nil error while calling UnsafePing. nil responses are not supported"))
 		return
 	}
 
@@ -1089,16 +1368,17 @@ func callClientError(ctx context.Context, h *twirp.ClientHooks, err twirp.Error)
 }
 
 var twirpFileDescriptor0 = []byte{
-	// 171 bytes of a gzipped FileDescriptorProto
+	// 183 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x2a, 0xc8, 0xcc, 0x4b,
 	0xd7, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x01, 0xb1, 0x95, 0xd4, 0xb9, 0xb8, 0x03, 0x32,
 	0xf3, 0xd2, 0x83, 0x52, 0x0b, 0x4b, 0x53, 0x8b, 0x4b, 0x84, 0x24, 0xb8, 0xd8, 0x73, 0x53, 0x8b,
 	0x8b, 0x13, 0xd3, 0x53, 0x25, 0x18, 0x15, 0x18, 0x35, 0x38, 0x83, 0x60, 0x5c, 0x25, 0x0d, 0x2e,
-	0x1e, 0x88, 0xc2, 0xe2, 0x82, 0xfc, 0xbc, 0xe2, 0x54, 0xdc, 0x2a, 0x8d, 0x6c, 0x20, 0x46, 0x06,
+	0x1e, 0x88, 0xc2, 0xe2, 0x82, 0xfc, 0xbc, 0xe2, 0x54, 0xdc, 0x2a, 0x8d, 0x0a, 0x21, 0x46, 0x06,
 	0xa7, 0x16, 0x95, 0x65, 0x26, 0xa7, 0x0a, 0xe9, 0x72, 0xb1, 0x80, 0xb8, 0x42, 0x82, 0x7a, 0x60,
-	0xcb, 0x91, 0x6c, 0x93, 0x12, 0x42, 0x16, 0x82, 0x98, 0xeb, 0xa4, 0x1b, 0xa5, 0x9d, 0x9e, 0x59,
-	0x92, 0x51, 0x9a, 0xa4, 0x97, 0x9c, 0x9f, 0xab, 0x9f, 0x9b, 0x58, 0x94, 0x9c, 0x5f, 0x9c, 0x91,
-	0x98, 0x9c, 0xad, 0x9f, 0x9e, 0xaf, 0x9b, 0x5a, 0x91, 0x98, 0x5b, 0x90, 0x93, 0x5a, 0xac, 0x5f,
-	0x52, 0x9e, 0x59, 0x54, 0xa0, 0x9f, 0x58, 0x90, 0x99, 0xc4, 0x06, 0xf6, 0x8c, 0x31, 0x20, 0x00,
-	0x00, 0xff, 0xff, 0xce, 0x52, 0x43, 0x5c, 0xda, 0x00, 0x00, 0x00,
+	0xcb, 0x91, 0x6c, 0x93, 0x12, 0x42, 0x16, 0x82, 0x9a, 0x6b, 0xcc, 0xc5, 0x15, 0x9a, 0x57, 0x9c,
+	0x98, 0x96, 0x4a, 0x82, 0x26, 0x27, 0xdd, 0x28, 0xed, 0xf4, 0xcc, 0x92, 0x8c, 0xd2, 0x24, 0xbd,
+	0xe4, 0xfc, 0x5c, 0xfd, 0xdc, 0xc4, 0xa2, 0xe4, 0xfc, 0xe2, 0x8c, 0xc4, 0xe4, 0x6c, 0xfd, 0xf4,
+	0x7c, 0xdd, 0xd4, 0x8a, 0xc4, 0xdc, 0x82, 0x9c, 0xd4, 0x62, 0xfd, 0x92, 0xf2, 0xcc, 0xa2, 0x02,
+	0xfd, 0xc4, 0x82, 0xcc, 0x24, 0x36, 0x70, 0x08, 0x18, 0x03, 0x02, 0x00, 0x00, 0xff, 0xff, 0x4f,
+	0x63, 0x53, 0x0e, 0x0f, 0x01, 0x00, 0x00,
 }
