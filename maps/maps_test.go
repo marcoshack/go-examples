@@ -35,3 +35,12 @@ func TestMaps_StructDefaultValues(t *testing.T) {
 	require.False(t, found)
 	require.NotNil(t, value)
 }
+
+func TestMaps_WithEmptyStringKeys(t *testing.T) {
+	myMap := make(map[string][]string)
+	myMap[""] = []string{"foo", "bar"}
+	myMap["key1"] = []string{"baz", "qux", "quux"}
+
+	require.Len(t, myMap[""], 2)
+	require.Len(t, myMap["key1"], 3)
+}
