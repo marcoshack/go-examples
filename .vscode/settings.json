@@ -3,4 +3,7 @@
     "go.testFlags": [
         "-v",
     ],
+    "go.toolsEnvVars": {
+        "GOPROXY": "direct",
+    }
 }
