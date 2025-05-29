@@ -11,6 +11,12 @@ import (
 )
 
 func main() {
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnixNano
+	zerolog.TimestampFunc = func() time.Time {
+		return time.Now().UTC()
+	}
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+
 	var writer io.Writer
 	writer = os.Stdout
 
@@ -21,11 +27,6 @@ func main() {
 		}
 	}
 
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnixNano
-	zerolog.TimestampFunc = func() time.Time {
-		return time.Now().UTC()
-	}
-	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	logger := zerolog.New(writer).With().Timestamp().Stack().Logger()
 
 	ctx := logger.WithContext(context.Background())
